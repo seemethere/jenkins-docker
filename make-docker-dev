@@ -1,0 +1,53 @@
+#!/bin/bash
+set -o errexit
+set -o xtrace
+set -o pipefail
+
+[ $# -lt 1 ] && echo not enough args && exit 1
+[ ! -d "$1" ] && echo $1 is not a directory && exit 1
+DOCKER_DIR="$1"
+DOCKER_COMMIT=`git -C "$DOCKER_DIR" rev-parse HEAD`
+
+# docker image name to push docker-dev to
+DOCKER_BUILD_IMG_NAME=${DOCKER_BUILD_IMG_NAME:-'dockerbuildbot/docker'}
+
+# Suffix for arch-specific images
+ARCH=${ARCH:-"amd64"}
+if [ "$ARCH" = "amd64" ]; then
+  ARCH_SUFFIX=""
+  DOCKER_BUILD_ARGS='--build-arg=APT_MIRROR=deb.debian.org'
+else
+  ARCH_SUFFIX="-${ARCH}"
+  DOCKER_BUILD_ARGS=""
+fi
+
+# full docker image name to push docker-dev to
+DOCKER_BUILD_IMG=${DOCKER_BUILD_IMG:-"${DOCKER_BUILD_IMG_NAME}:${DOCKER_COMMIT}${ARCH_SUFFIX}"}
+
+# set to 1 to force rebuild of image and push
+FORCE_REBUILD=${FORCE_REBUILD:-0}
+
+PULL_RET=0
+docker pull "$DOCKER_BUILD_IMG" || PULL_RET=$?
+if [ "$FORCE_REBUILD" -eq 1 ] || [ "$PULL_RET" -ne 0 ];
+then
+  BUILD_TAG=${BUILD_TAG:-tmp}
+  EXECUTOR_NUMBER=${EXECUTOR_NUMBER:-0}
+  TMP_IMG=${TMP_IMG:-`echo "$BUILD_TAG-$EXECUTOR_NUMBER:latest" | tr A-Z a-z`}
+  make -C "$DOCKER_DIR" DOCKER_BUILD_ARGS="${DOCKER_BUILD_ARGS}" DOCKER_IMAGE="$TMP_IMG" build
+  docker tag "$TMP_IMG" "$DOCKER_BUILD_IMG"
+  if [ "$BUILD_TAG" == "tmp" ];
+  then
+    echo not a jenkins job, skipping docker push "$DOCKER_BUILD_IMG"
+  else
+    docker push "$DOCKER_BUILD_IMG"
+  fi
+  docker rmi "$TMP_IMG"
+else
+  echo "found $DOCKER_BUILD_IMG, skip building"
+fi
+
+if ! docker inspect -f '{{ index .RepoDigests 0 }}' "$DOCKER_BUILD_IMG" > docker-dev-digest.txt ; then
+  # Fallback in case a digest wasn't set.
+  echo "$DOCKER_BUILD_IMG" > docker-dev-digest.txt
+fi
