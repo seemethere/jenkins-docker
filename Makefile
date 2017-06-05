@@ -22,6 +22,9 @@ clean: ## clean artifacts
 	$(RM) *.tgz
 	$(RM) *.txt
 
+docker-gitcommit.txt: ## save docker gitcommit to file
+	echo $(DOCKER_GITCOMMIT) > $@
+
 docker-ce.tgz: ## package source
 	git clone -b $(BASE_BRANCH) $(GIT_BASE_REPO) docker-ce
 	tar czf $@ docker-ce
