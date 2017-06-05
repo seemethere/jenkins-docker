@@ -1,0 +1,1 @@
+# jenkins-docker-ce-17.06
