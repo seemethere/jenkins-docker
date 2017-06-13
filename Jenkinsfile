@@ -60,10 +60,10 @@ def init_steps = [
           sh('make clean')
           sshagent(['docker-jenkins.github.ssh']) {
             dir('docker-ce/components/cli') {
-              git url: "https://github.com/${params.CLI_REPO}.git", branch: "${params.CLI_GIT_SHA1}"
+              git url: "https://github.com/${params.CLI_REPO}.git"
             }
             dir('docker-ce/components/engine') {
-              git url: "https://github.com/${params.ENGINE_REPO}.git", branch: "${params.ENGINE_GIT_SHA1}"
+              git url: "https://github.com/${params.ENGINE_REPO}.git"
             }
             sh('cat docker-ce/components/cli/VERSION > docker-ce/VERSION')
             sh('make docker-ce.tgz docker-dev binary-daemon binary-client')
