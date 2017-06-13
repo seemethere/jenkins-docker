@@ -56,6 +56,7 @@ log-%.tgz: ## package integration test logs
 
 daemon-unit-test: ## run unit tests for daemon
 	docker run --rm --privileged --name $(CONTAINER_NAME)-daemon-unit \
+		-t \
 		-e DOCKER_GITCOMMIT=$(DOCKER_GITCOMMIT) \
 		$(DOCKER_DEV_IMG) hack/make.sh test-unit
 
