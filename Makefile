@@ -26,7 +26,7 @@ docker-gitcommit.txt: ## save docker gitcommit to file
 	echo $(DOCKER_GITCOMMIT) > $@
 
 docker-ce.tgz: ## package source
-	test ! -d docker-ce git clone -b $(BASE_BRANCH) $(GIT_BASE_REPO) docker-ce
+	test ! -d docker-ce && git clone -b $(BASE_BRANCH) $(GIT_BASE_REPO) docker-ce
 	tar czf $@ docker-ce
 
 docker-dev: ## build and push docker-dev image
