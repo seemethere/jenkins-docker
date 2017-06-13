@@ -72,6 +72,7 @@ def init_steps = [
           stashS3(name: 'build-binary-client', includes: 'docker-ce/components/cli/build/*')
           archiveArtifacts('docker-dev-digest.txt')
           saveS3(name: 'docker-dev-digest.txt')
+          saveS3(name: 'docker-gitcommit.txt')
           saveS3(name: 'docker-ce.tgz')
         }
       }
@@ -107,10 +108,13 @@ def genTestStep(String s) {
           unstashS3('bundles-binary-daemon')
           unstashS3('bundles-binary-daemon')
           unstashS3('build-binary-client')
+          readS3(name: 'docker-gitcommit.txt')
           readS3(name: 'docker-dev-digest.txt')
           img = sh(script: 'cat docker-dev-digest.txt', returnStdout: true).trim()
+          docker_gitcommit = sh(script: 'cat docker-gitcommit.txt', returnStdout: true).trim()
+          img = sh(script: 'cat docker-dev-digest.txt', returnStdout: true).trim()
           try {
-            sh("make DOCKER_DEV_IMG=${img} TEST_SUITE=${s} test-integration-cli log-${s}.tgz")
+            sh("make DOCKER_GITCOMMIT=${docker_gitcommit} DOCKER_DEV_IMG=${img} TEST_SUITE=${s} test-integration-cli log-${s}.tgz")
           } finally {
             sh("make log-${s}.tgz")
             archiveArtifacts("log-${s}.tgz")
