@@ -66,7 +66,7 @@ def init_steps = [
               git url: "https://github.com/${params.ENGINE_REPO}.git"
             }
             sh('cat docker-ce/components/cli/VERSION > docker-ce/VERSION')
-            sh('make docker-ce.tgz docker-dev binary-daemon binary-client')
+            sh('make docker-ce.tgz docker-gitcommit.txt docker-dev binary-daemon binary-client')
           }
           stashS3(name: 'bundles-binary-daemon', includes: 'bundles/*/binary-daemon/**')
           stashS3(name: 'build-binary-client', includes: 'docker-ce/components/cli/build/*')
