@@ -9,7 +9,8 @@ properties(
         string(name: 'ENGINE_REPO', defaultValue: 'moby/moby', description: 'destination repo pr is merging into'),
         string(name: 'ENGINE_GIT_SHA1', defaultValue: '', description: 'full git sha of source repo'),
       ]
-    )
+    ),
+    pipelineTriggers([cron('H 11 * * *')])
   ]
 )
 
