@@ -26,7 +26,7 @@ docker-gitcommit.txt: ## save docker gitcommit to file
 	echo $(DOCKER_GITCOMMIT) > $@
 
 docker-ce.tgz: ## package source
-	git clone -b $(BASE_BRANCH) $(GIT_BASE_REPO) docker-ce
+	test ! -d docker-ce git clone -b $(BASE_BRANCH) $(GIT_BASE_REPO) docker-ce
 	tar czf $@ docker-ce
 
 docker-dev: ## build and push docker-dev image
@@ -38,7 +38,6 @@ binary-client: ## statically compile cli
 binary-daemon: ## statically compile daemon for running tests
 	docker run --rm --privileged --name $(CONTAINER_NAME)-binary \
 		-v $(VOL_MNT_BUNDLES) \
-		-e DOCKER_GITCOMMIT=$(DOCKER_GITCOMMIT) \
 		$(DOCKER_DEV_IMG) hack/make.sh binary
 
 test-integration-cli: ## run integration test for TEST_SUITE
@@ -46,7 +45,6 @@ test-integration-cli: ## run integration test for TEST_SUITE
 		-v $(VOL_MNT_BUNDLES) \
 		-v $(VOL_MNT_CLI) \
 		-e DOCKER_CLI_PATH=docker \
-		-e DOCKER_GITCOMMIT=$(DOCKER_GITCOMMIT) \
 		-e TESTFLAGS='-check.f $(TEST_SUITE).*' \
 		-e KEEPBUNDLE=1 \
 		$(DOCKER_DEV_IMG) hack/make.sh test-integration-cli
@@ -57,7 +55,6 @@ log-%.tgz: ## package integration test logs
 
 daemon-unit-test: ## run unit tests for daemon
 	docker run --rm --privileged --name $(CONTAINER_NAME)-daemon-unit \
-		-e DOCKER_GITCOMMIT=$(DOCKER_GITCOMMIT) \
 		$(DOCKER_DEV_IMG) hack/make.sh test-unit
 
 extract-src: ## extract docker-ce source

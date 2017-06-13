@@ -4,10 +4,10 @@ properties(
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '100')),
     parameters(
       [
-        string(name: 'GIT_BASE_REPO', defaultValue: 'docker/docker-ce', description: 'destination repo pr is merging into'),
-        string(name: 'GIT_HEAD_REPO', defaultValue: '', description: 'source repo pr is merging from'),
-        string(name: 'GIT_SHA1', defaultValue: '', description: 'full git sha of source repo'),
-        string(name: 'BASE_BRANCH', defaultValue: '17.06', description: 'destination repo branch pr is merging into'),
+        string(name: 'CLI_REPO', defaultValue: 'docker/cli', description: 'destination repo pr is merging into'),
+        string(name: 'CLI_GIT_SHA1', defaultValue: '', description: 'full git sha of source repo'),
+        string(name: 'ENGINE_REPO', defaultValue: 'moby/moby', description: 'destination repo pr is merging into'),
+        string(name: 'ENGINE_GIT_SHA1', defaultValue: '', description: 'full git sha of source repo'),
       ]
     )
   ]
@@ -59,14 +59,19 @@ def init_steps = [
           checkout scm
           sh('make clean')
           sshagent(['docker-jenkins.github.ssh']) {
-            sh('make docker-ce.tgz docker-gitcommit.txt docker-dev binary-daemon binary-client')
+            dir('docker-ce/components/cli') {
+              git url: "https://github.com/${env.CLI_REPO}.git", branch: "${env.CLI_GIT_SHA1}"
+            }
+            dir('docker-ce/components/engine') {
+              git url: "https://github.com/${env.ENGINE_REPO}.git", branch: "${env.ENGINE_GIT_SHA1}"
+            }
+            sh('cat docker-ce/components/cli/VERSION > docker-ce/VERSION')
+            sh('make docker-ce.tgz docker-dev binary-daemon binary-client')
           }
           stashS3(name: 'bundles-binary-daemon', includes: 'bundles/*/binary-daemon/**')
           stashS3(name: 'build-binary-client', includes: 'docker-ce/components/cli/build/*')
           archiveArtifacts('docker-dev-digest.txt')
-          archiveArtifacts('docker-gitcommit.txt')
           saveS3(name: 'docker-dev-digest.txt')
-          saveS3(name: 'docker-gitcommit.txt')
           saveS3(name: 'docker-ce.tgz')
         }
       }
@@ -102,12 +107,10 @@ def genTestStep(String s) {
           unstashS3('bundles-binary-daemon')
           unstashS3('bundles-binary-daemon')
           unstashS3('build-binary-client')
-          readS3(name: 'docker-gitcommit.txt')
           readS3(name: 'docker-dev-digest.txt')
           img = sh(script: 'cat docker-dev-digest.txt', returnStdout: true).trim()
-          docker_gitcommit = sh(script: 'cat docker-gitcommit.txt', returnStdout: true).trim()
           try {
-            sh("make DOCKER_GITCOMMIT=${docker_gitcommit} DOCKER_DEV_IMG=${img} TEST_SUITE=${s} test-integration-cli log-${s}.tgz")
+            sh("make DOCKER_DEV_IMG=${img} TEST_SUITE=${s} test-integration-cli log-${s}.tgz")
           } finally {
             sh("make log-${s}.tgz")
             archiveArtifacts("log-${s}.tgz")
