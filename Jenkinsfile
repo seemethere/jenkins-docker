@@ -4,10 +4,10 @@ properties(
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '100')),
     parameters(
       [
-        string(name: 'CLI_REPO', defaultValue: 'docker/cli', description: 'destination repo pr is merging into'),
-        string(name: 'CLI_GIT_SHA1', defaultValue: '', description: 'full git sha of source repo'),
-        string(name: 'ENGINE_REPO', defaultValue: 'moby/moby', description: 'destination repo pr is merging into'),
-        string(name: 'ENGINE_GIT_SHA1', defaultValue: '', description: 'full git sha of source repo'),
+        string(name: 'CLI_REPO', defaultValue: 'docker/cli', description: 'docker/cli repo to pull from'),
+        string(name: 'CLI_REV', defaultValue: 'master', description: 'Revision to base the test runs off (branch / sha1)'),
+        string(name: 'ENGINE_REPO', defaultValue: 'moby/moby', description: 'moby/moby '),
+        string(name: 'ENGINE_REV', defaultValue: 'master', description: 'Revision to base the test runs off (branch / sha1'),
       ]
     ),
     pipelineTriggers([cron('H 11 * * *')])
@@ -63,9 +63,11 @@ def init_steps = [
             dir('docker-ce/components/cli') {
               git url: "https://github.com/${params.CLI_REPO}.git"
             }
+            sh("git -C docker-ce/components/cli checkout ${params.CLI_REV}")
             dir('docker-ce/components/engine') {
               git url: "https://github.com/${params.ENGINE_REPO}.git"
             }
+            sh("git -C docker-ce/components/engine checkout ${params.ENGINE_REV}")
             sh('cat docker-ce/components/cli/VERSION > docker-ce/VERSION')
             sh('make docker-ce.tgz docker-gitcommit.txt docker-dev binary-daemon binary-client')
           }
