@@ -64,4 +64,4 @@ extract-src: ## extract docker-ce source
 	tar xzf docker-ce.tgz
 
 client-unit-test: ## run unit tests for cli
-	make -C $(CLI_DIR) -f docker.Makefile test
+	make -C $(CLI_DIR) -f docker.Makefile test-unit
