@@ -46,9 +46,9 @@ test-integration-cli: ## run integration test for TEST_SUITE
 		-v $(VOL_MNT_CLI) \
 		-e DOCKER_CLI_PATH=docker \
 		-e DOCKER_GITCOMMIT=$(DOCKER_GITCOMMIT) \
-		-e TESTFLAGS='-test.run $(TEST_SUITE).*' \
+		-e TESTFLAGS='-check.f $(TEST_SUITE).*' \
 		-e KEEPBUNDLE=1 \
-		$(DOCKER_DEV_IMG) hack/make.sh test-integration-cli
+		$(DOCKER_DEV_IMG) hack/make.sh test-integration
 
 log-%.tgz: ## package integration test logs
 	$(CHOWN) -R $(shell id -u):$(shell id -g) bundles
