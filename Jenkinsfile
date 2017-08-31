@@ -56,6 +56,7 @@ def init_steps = [
   'init': { ->
     stage('src') {
       wrappedNode(label: 'aufs', cleanWorkspace: true) {
+        currentBuild.displayName = "${params.ENGINE_REPO}-${params.ENGINE_REV}-${params.CLI_REPO}-${params.CLI_REV}"
         withChownWorkspace {
           checkout scm
           sh('make clean')
