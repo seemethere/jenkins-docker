@@ -72,7 +72,7 @@ def init_steps = [
             sh('cat docker-ce/components/cli/VERSION > docker-ce/VERSION')
             sh('make docker-ce.tgz docker-gitcommit.txt docker-dev binary-daemon binary-client')
           }
-          stashS3(name: 'bundles-binary-daemon', includes: 'bundles/*/binary-daemon/**')
+          stashS3(name: 'bundles-binary-daemon', includes: 'bundles/binary-daemon/**')
           stashS3(name: 'build-binary-client', includes: 'docker-ce/components/cli/build/*')
           archiveArtifacts('docker-dev-digest.txt')
           saveS3(name: 'docker-dev-digest.txt')
