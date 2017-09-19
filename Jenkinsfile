@@ -37,7 +37,7 @@ def readS3(def Map args=[:]) {
 
 def stashS3(def Map args=[:]) {
     def awscli = args.awscli ?: 'docker run --rm -e AWS_SECRET_ACCESS_KEY -e AWS_ACCESS_KEY_ID -v `pwd`:/z -w /z anigeo/awscli@sha256:669501d7b48fe5f00a3a2b23edfa1d75f43382835b0b54327a751c1bc52bf3bc'
-    sh("find . -path './${args.includes}' | tar -c -z -f '${args.name}.tar.gz' -T -")
+    sh("find . -L -path './${args.includes}' | tar -c -z -f '${args.name}.tar.gz' -T -")
     withCredentials([aws_creds, string(credentialsId: 'jenkins-s3-buck', variable: 'JENKINS_S3_BUCK')]) {
         sh("${awscli} s3 cp --only-show-errors '${args.name}.tar.gz' 's3://$JENKINS_S3_BUCK/${env.BUILD_TAG}/'")
     }
@@ -72,7 +72,7 @@ def init_steps = [
             sh('cat docker-ce/components/cli/VERSION > docker-ce/VERSION')
             sh('make docker-ce.tgz docker-gitcommit.txt docker-dev binary-daemon binary-client')
           }
-          stashS3(name: 'bundles-binary-daemon', includes: 'bundles/binary-daemon/**')
+          stashS3(name: 'bundles-binary-daemon', includes: 'bundles/latest/binary-daemon/**')
           stashS3(name: 'build-binary-client', includes: 'docker-ce/components/cli/build/*')
           archiveArtifacts('docker-dev-digest.txt')
           saveS3(name: 'docker-dev-digest.txt')
